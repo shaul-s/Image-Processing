@@ -3,8 +3,22 @@ import numpy as np
 import cv2
 import glob
 
-def normalCDF(x, E, sigma):
+def normalCDF(x, E, sigma):  # use this to create a "histogram" of the normal CDF
+    """
+    :param x: the current x value for normal CDF
+    :param E: the mean value
+    :param sigma: the variance value
+    :return: the value of the normal distribution CDF for an x value
+    """
     return (1/np.sqrt(2*np.pi*sigma))*np.exp((-(x-E)**2)/(2*sigma))
+
+def expCDF(x, lam):
+    """
+    :param x: the current x value for exp CDF
+    :param lam: the lambda value
+    :return: ...
+    """
+    return lam*np.exp(-lam*x)
 
 def histMatching(img, template_hist):
     hist = cv2.calcHist([img], [0], None, [256], [0, 256])
@@ -52,8 +66,6 @@ def histMatching(img, template_hist):
     plt.title('Matched Image'), plt.xticks([]), plt.yticks([])
     plt.show()
 
-
-
 if __name__ == '__main__':
     # Find all the names of all the files with the format .jpg in the file Images\1
     imgNames = glob.glob(r'*.tif')
@@ -63,10 +75,10 @@ if __name__ == '__main__':
         # part 1 - applying histogram equalization & plotting
         img = cv2.imread(img, 0)
         x = np.arange(0,256,1)
-        template_hist = normalCDF(x, 100, 100)
-        histMatching(img, template_hist.cumsum())
+        template_hist_nCDF = normalCDF(x, 250, 20)
+        template_hist_eCDF = expCDF(x, 0.01)
+        # histMatching(img, template_hist_nCDF.cumsum())
+        histMatching(img, template_hist_eCDF.cumsum())
 
 
 
-
-        print('')
