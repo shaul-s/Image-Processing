@@ -5,7 +5,13 @@ from skimage.util import random_noise
 import glob
 
 def fun1(x):
-    return -2*np.sin(2*np.pi*x)
+    return -np.sin(2*np.pi*x)
+
+def fun2(x):
+    return 6+2*np.cos(4*np.pi*x)+8*np.cos(2*np.pi*x)
+
+def fun3(x):
+    return 2-2*np.cos(2*np.pi*x)
 
 if __name__ == '__main__':
     img = cv2.imread('pirate.tif', 0)
@@ -41,7 +47,7 @@ if __name__ == '__main__':
     plt.show()
 
     x = np.linspace(0,0.5*np.pi)
-    y = fun1(x)
+    y = fun3(x)
     plt.grid(color='r', linestyle='-', linewidth=0.1)
     plt.plot(x,y)
 
