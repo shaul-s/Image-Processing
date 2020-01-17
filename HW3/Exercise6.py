@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-import MatrixMethods as mm
-
 
 if __name__ == '__main__':
     img = cv2.imread('mario.png', 0)
