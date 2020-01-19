@@ -31,16 +31,16 @@
     },
     {
       "point": [
-        426.0,
-        486.0
+        425.0,
+        485.0
       ],
       "fill_color": null,
       "label": "2"
     },
     {
       "point": [
-        485.0,
-        503.0
+        486.0,
+        504.0
       ],
       "fill_color": null,
       "label": "3"
@@ -55,51 +55,43 @@
     },
     {
       "point": [
-        514.0,
-        474.0
+        643.0,
+        347.0
       ],
       "fill_color": null,
       "label": "5"
     },
     {
       "point": [
-        643.0,
-        347.0
+        844.0,
+        446.0
       ],
       "fill_color": null,
       "label": "6"
     },
     {
       "point": [
-        644.0,
-        331.0
+        861.0,
+        433.0
       ],
       "fill_color": null,
       "label": "7"
     },
     {
       "point": [
-        831.0,
-        438.0
+        1108.0,
+        442.0
       ],
       "fill_color": null,
       "label": "8"
     },
     {
       "point": [
-        845.0,
-        447.0
+        1264.0,
+        615.0
       ],
       "fill_color": null,
       "label": "9"
-    },
-    {
-      "point": [
-        845.0,
-        420.0
-      ],
-      "fill_color": null,
-      "label": "10"
     }
   ]
 }
