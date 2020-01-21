@@ -2,7 +2,9 @@ import cv2
 import matplotlib.pyplot as plt
 import Reader as rd
 import numpy as np
-from scipy import linalg as la
+
+
+# from scipy import linalg as la
 
 
 ### PART B - IMAGE BLENDING USING PYRAMIDS & PLANTING AN IMAGE INSIDE THE PANORAMA ###
@@ -89,7 +91,7 @@ def computeHomography(trgtPoints, srcPoints):
         A[i + 1, 6] = -srcPoints[i] * trgtPoints[i + 1]
         A[i + 1, 7] = -srcPoints[i + 1] * trgtPoints[i + 1]
 
-    X = np.dot(la.inv(np.dot(A.T, A)), np.dot(A.T, l))
+    X = np.dot(np.linalg.inv(np.dot(A.T, A)), np.dot(A.T, l))
     R = np.array([[float(X[0]), float(X[1]), float(X[2])], [float(X[3]), float(X[4]), float(X[5])],
                   [float(X[6]), float(X[7]), 1]])
 
@@ -160,7 +162,7 @@ if __name__ == '__main__':
     ### COMPUTING HOMOGRAPHY ###
     T_matrix = computeHomography(targetPoints, sourcePoints)
 
-    T_matrix_inv = la.inv(T_matrix)
+    T_matrix_inv = np.linalg.inv(T_matrix)
 
     for i in range(panorama.shape[1]):
         for j in range(panorama.shape[0]):
