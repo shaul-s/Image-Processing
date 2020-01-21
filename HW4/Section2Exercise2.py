@@ -1,9 +1,10 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import Reader as rd
 from scipy import linalg as la
 
+
+### PART A - HOMOGRAPHY AND SPATIAL TRANSFORMATION ###
 
 def computeHomography(trgtPoints, srcPoints):
     """
@@ -77,12 +78,8 @@ if __name__ == '__main__':
     r_center_img = cv2.GaussianBlur(r_center_img[::2, ::2], (5, 5), 1)
     r_right_img = cv2.GaussianBlur(right_img[::2, ::2], (5, 5), 1)
     r_right_img = cv2.GaussianBlur(r_right_img[::2, ::2], (5, 5), 1)
-    
-    ### SPLITTING IMAGES TO 3 CHANNELS ###
-    left_b, left_g, left_r = cv2.split(left_img)
-    center_b, center_g, center_r = cv2.split(center_img)
-    right_b, right_g, right_r = cv2.split(right_img)
     """
+
     ### READING HOMOLOGUE POINTS ###
     targetPoints_left = rd.Reader.ReadSampleFile(r'center_image_left.json')
     targetPoints_right = rd.Reader.ReadSampleFile(r'center_image_right.json')
@@ -102,7 +99,9 @@ if __name__ == '__main__':
     pano_cols = int(max(dimensions[0:2, :].reshape((-1))) - min(dimensions[0:2, :].reshape((-1))))
     pano_rows = int(max(dimensions[1:-1, :].reshape((-1))))
 
-    panorama = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')  # blank panorama size
+    panorama_left = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')  # blank panorama size
+    panorama_center = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')
+    panorama_right = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')
 
     ### SHIFT MATRIX ###
     T = np.eye(3)
@@ -116,8 +115,8 @@ if __name__ == '__main__':
     center_matrix_inv = la.inv(T)
 
     ### RESAMPLING WITH NEAREST NEIGHBOUR INTERPOLATION ###
-    for i in range(panorama.shape[1]):
-        for j in range(panorama.shape[0]):
+    for i in range(panorama_left.shape[1]):
+        for j in range(panorama_left.shape[0]):
             pix = np.array([[i], [j], [1]])
             target_pix = np.dot(left_matrix_inv, pix)
             target_pix = np.array([target_pix[0] / target_pix[2], target_pix[1] / target_pix[2]])
@@ -125,10 +124,10 @@ if __name__ == '__main__':
             if (target_pix[0] >= 0) and (target_pix[0] + 1 < left_img.shape[1]) and (target_pix[1] >= 0) and (
                     target_pix[1] + 1 < left_img.shape[0]):
                 target_pix = target_pix.astype(int)
-                panorama[j, i] = left_img[target_pix[1], target_pix[0], :]
+                panorama_left[j, i] = left_img[target_pix[1], target_pix[0], :]
 
-    for i in range(panorama.shape[1]):
-        for j in range(panorama.shape[0]):
+    for i in range(panorama_right.shape[1]):
+        for j in range(panorama_right.shape[0]):
             pix = np.array([[i], [j], [1]])
             target_pix = np.dot(right_matrix_inv, pix)
             target_pix = np.array([target_pix[0] / target_pix[2], target_pix[1] / target_pix[2]])
@@ -136,10 +135,10 @@ if __name__ == '__main__':
             if (target_pix[0] >= 0) and (target_pix[0] + 1 < right_img.shape[1]) and (target_pix[1] >= 0) and (
                     target_pix[1] + 1 < right_img.shape[0]):
                 target_pix = target_pix.astype(int)
-                panorama[j, i] = right_img[target_pix[1], target_pix[0], :]
+                panorama_right[j, i] = right_img[target_pix[1], target_pix[0], :]
 
-    for i in range(panorama.shape[1]):
-        for j in range(panorama.shape[0]):
+    for i in range(panorama_center.shape[1]):
+        for j in range(panorama_center.shape[0]):
             pix = np.array([[i], [j], [1]])
             target_pix = np.dot(center_matrix_inv, pix)
             target_pix = np.array([target_pix[0] / target_pix[2], target_pix[1] / target_pix[2]]).astype(int)
@@ -147,10 +146,12 @@ if __name__ == '__main__':
             if (target_pix[0] >= 0) and (target_pix[0] + 1 < center_img.shape[1]) and (target_pix[1] >= 0) and (
                     target_pix[1] + 1 < center_img.shape[0]):
                 target_pix = target_pix.astype(int)
-                panorama[j, i] = center_img[target_pix[1], target_pix[0], :]
+                panorama_center[j, i] = center_img[target_pix[1], target_pix[0], :]
 
-    plt.imshow(cv2.cvtColor(panorama, cv2.COLOR_BGR2RGB))
-    plt.show()
+    ### SAVING IMAGES ###
+    cv2.imwrite('left.jpg', panorama_left)
+    cv2.imwrite('right.jpg', panorama_right)
+    cv2.imwrite('center.jpg', panorama_center)
 
     """
     for i in range(panorama.shape[1]):
@@ -169,4 +170,3 @@ if __name__ == '__main__':
                      [left_img[target_pix[1], target_pix[0] + 1], left_img[target_pix[1] + 1, target_pix[0] + 1]]])[:, :, 0, 0]), np.array([1 - b, b])))
 
     """
-    print('hi')
