@@ -1,8 +1,11 @@
 import cv2
+import matplotlib.pyplot as plt
 import Reader as rd
 import numpy as np
+from scipy import linalg as la
 
-### PART B - IMAGE BLENDING USING PYRAMIDS ###
+
+### PART B - IMAGE BLENDING USING PYRAMIDS & PLANTING AN IMAGE INSIDE THE PANORAMA ###
 
 def computeGaussianPyramid(image, n):
     """
@@ -15,15 +18,15 @@ def computeGaussianPyramid(image, n):
     for i in range(n):
         image_copy = image_copy[::2, ::2]
         # take every second pixel and smooth w 5x5 gaussian filter
-        gp.append(cv2.GaussianBlur(image_copy, (5, 5), 1))
+        gp.append(cv2.GaussianBlur(image_copy.astype(np.uint8), (5, 5), 1))
 
     return gp
 
 
 def computeLaplacianPyramid(gaussianPyramid):
     """
-    :param gaussianPyramid:
-    :return:
+    :param gaussianPyramid: list of the gaussian pyramid of an image
+    :return: the laplacian pyramid matching the gaussian pyramid
     """
     lp = [gaussianPyramid[-1]]
     for i in range(len(gaussianPyramid) - 1, 0, -1):
@@ -46,7 +49,7 @@ def generateMask(image):
     for i in range(image.shape[1]):
         for j in range(image.shape[0]):
             if image_copy[j, i].all() != 0:
-                image_copy[j, i] = 255
+                image_copy[j, i] = 1
 
     return image_copy
 
@@ -112,14 +115,17 @@ def computeImageCorners(imgShape, R):
     return np.array([x_max, x_min, y_max, y_min])
 
 
+### ###
+
+
 if __name__ == '__main__':
-    """
+
     ### LOADING PANORAMA IMAGES TO BLEND ###
     left_img = cv2.imread(r'left.jpg', 1)
     center_img = cv2.imread(r'center.jpg', 1)
     right_img = cv2.imread(r'right.jpg', 1)
 
-    mask = generateMask(center_img)
+    mask = generateMask(left_img)
 
     lpRight = computeLaplacianPyramid(computeGaussianPyramid(right_img, 6))
     lpCenter = computeLaplacianPyramid(computeGaussianPyramid(center_img, 6))
@@ -129,27 +135,42 @@ if __name__ == '__main__':
     gpMask = gpMask[::-1]
 
     ### BLEND LEFT AND CENTER PYRAMIDS ###
+    ### BLEND LAPLACIAN PYRAMIDS WITH MASK ###
     LS_left = []
     for la, lb, gm in zip(lpLeft, lpCenter, gpMask):
-        ls = lb * gm + la * (1.0 - gm)
+        ls = la * gm + lb * (1.0 - gm)
         LS_left.append(ls)
 
-    # now reconstruct
+    ### IMAGE RECONSTRUCTION ###
     ls_ = LS_left[0]
     for i in range(1, 7):
         ls_ = cv2.resize(ls_, dsize=(LS_left[i].shape[1], LS_left[i].shape[0]), interpolation=cv2.INTER_CUBIC)
         ls_ = cv2.add(ls_, LS_left[i])
 
-    #cv2.imwrite("left_center.png", ls_)
-    """
+    cv2.imwrite("left_center.png", ls_)
 
     ### PLANTING IMAGE INSIDE THE PANORAMA ###
-    windows_scene = cv2.imread(r'something_nice.jpeg', 1)
+    photo_bomb = cv2.imread(r'something_nice.jpeg', 1)
+    panorama = cv2.imread(r'full_panorama_rgb.png', 1)
     ### READING HOMOLOGUE POINTS ###
     targetPoints = rd.Reader.ReadSampleFile(r'full_panorama_rgb.json')
-    sourcePoints = np.array([[0, windows_scene.shape[1], windows_scene.shape[1], 0],
-                             [0, 0, windows_scene.shape[0], windows_scene.shape[0]]]).T
+    sourcePoints = np.array([[0, photo_bomb.shape[1], photo_bomb.shape[1], 0],
+                             [0, 0, photo_bomb.shape[0], photo_bomb.shape[0]]]).T
+
     ### COMPUTING HOMOGRAPHY ###
     T_matrix = computeHomography(targetPoints, sourcePoints)
 
-    print('hi')
+    T_matrix_inv = la.inv(T_matrix)
+
+    for i in range(panorama.shape[1]):
+        for j in range(panorama.shape[0]):
+            pix = np.array([[i], [j], [1]])
+            target_pix = np.dot(T_matrix_inv, pix)
+            target_pix = np.array([target_pix[0] / target_pix[2], target_pix[1] / target_pix[2]])
+            # check if pixel is indeed in the image
+            if (target_pix[0] >= 0) and (target_pix[0] + 1 < photo_bomb.shape[1]) and (target_pix[1] >= 0) and (
+                    target_pix[1] + 1 < photo_bomb.shape[0]):
+                target_pix = target_pix.astype(int)
+                panorama[j, i] = photo_bomb[target_pix[1], target_pix[0], :]
+
+    cv2.imwrite('try1.png', panorama)

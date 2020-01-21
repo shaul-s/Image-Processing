@@ -81,9 +81,6 @@ if __name__ == '__main__':
     R_left = computeHomography(targetPoints_left, sourcePoints_left)
     R_right = computeHomography(targetPoints_right, sourcePoints_right)
 
-    center_img[0][:, ::2] = 0
-    center_img[1][::2, :] = 0
-
     ### COMPUTING PANORAMA DIMENSIONS + SHIFT MATRIX ###
     left_dimension = computeImageCorners(center_img.shape[:-1], R_left)
     right_dimension = computeImageCorners(center_img.shape[:-1], R_right)
