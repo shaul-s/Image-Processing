@@ -70,15 +70,6 @@ if __name__ == '__main__':
     left_img = cv2.imread(r'left_image.jpg', 1)
     center_img = cv2.imread(r'center_image.jpg', 1)
     right_img = cv2.imread(r'right_image.jpg', 1)
-    """
-    ### REDUCING IMG TO GET BETTER RUN TIMES ###
-    r_left_img = cv2.GaussianBlur(left_img[::2, ::2], (5, 5), 1)
-    r_left_img = cv2.GaussianBlur(r_left_img[::2, ::2], (5, 5), 1)
-    r_center_img = cv2.GaussianBlur(center_img[::2, ::2], (5, 5), 1)
-    r_center_img = cv2.GaussianBlur(r_center_img[::2, ::2], (5, 5), 1)
-    r_right_img = cv2.GaussianBlur(right_img[::2, ::2], (5, 5), 1)
-    r_right_img = cv2.GaussianBlur(r_right_img[::2, ::2], (5, 5), 1)
-    """
 
     ### READING HOMOLOGUE POINTS ###
     targetPoints_left = rd.Reader.ReadSampleFile(r'center_image_left.json')
@@ -105,6 +96,7 @@ if __name__ == '__main__':
     panorama_left = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')  # blank panorama size
     panorama_center = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')
     panorama_right = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')
+    panorama = np.zeros((pano_rows, pano_cols, 3), dtype='uint8')
 
     ### SHIFT MATRIX ###
     T = np.eye(3)
@@ -127,7 +119,7 @@ if __name__ == '__main__':
             if (target_pix[0] >= 0) and (target_pix[0] + 1 < left_img.shape[1]) and (target_pix[1] >= 0) and (
                     target_pix[1] + 1 < left_img.shape[0]):
                 target_pix = target_pix.astype(int)
-                panorama_left[j, i] = left_img[target_pix[1], target_pix[0], :]
+                panorama[j, i] = left_img[target_pix[1], target_pix[0], :]
 
     for i in range(panorama_right.shape[1]):
         for j in range(panorama_right.shape[0]):
@@ -138,7 +130,7 @@ if __name__ == '__main__':
             if (target_pix[0] >= 0) and (target_pix[0] + 1 < right_img.shape[1]) and (target_pix[1] >= 0) and (
                     target_pix[1] + 1 < right_img.shape[0]):
                 target_pix = target_pix.astype(int)
-                panorama_right[j, i] = right_img[target_pix[1], target_pix[0], :]
+                panorama[j, i] = right_img[target_pix[1], target_pix[0], :]
 
     for i in range(panorama_center.shape[1]):
         for j in range(panorama_center.shape[0]):
@@ -149,27 +141,12 @@ if __name__ == '__main__':
             if (target_pix[0] >= 0) and (target_pix[0] + 1 < center_img.shape[1]) and (target_pix[1] >= 0) and (
                     target_pix[1] + 1 < center_img.shape[0]):
                 target_pix = target_pix.astype(int)
-                panorama_center[j, i] = center_img[target_pix[1], target_pix[0], :]
+                panorama[j, i] = center_img[target_pix[1], target_pix[0], :]
 
     ### SAVING IMAGES ###
+    """
     cv2.imwrite('left.jpg', panorama_left)
     cv2.imwrite('right.jpg', panorama_right)
     cv2.imwrite('center.jpg', panorama_center)
-
     """
-    for i in range(panorama.shape[1]):
-        for j in range(panorama.shape[0]):
-            pix = np.array([[i], [j], [1]])
-            target_pix = np.dot(left_matrix_inv, pix)
-            target_pix = np.array([target_pix[0] / target_pix[2], target_pix[1] / target_pix[2]])
-            # check if pixel is indeed in the image
-            if (target_pix[0] >= 0) and (target_pix[0] + 1 < left_img.shape[1]) and (target_pix[1] >= 0) and (
-                    target_pix[1] + 1 < left_img.shape[0]):
-                a = float(target_pix[0] - int(target_pix[0]))
-                b = float(target_pix[1] - int(target_pix[1]))
-                target_pix = target_pix.astype(int)
-                panorama[j, i, :] = int(np.dot(np.dot(np.array([[1 - a], [a]]).T, np.array(
-                    [[left_img[target_pix[1], target_pix[0]], left_img[target_pix[1] + 1, target_pix[0]]],
-                     [left_img[target_pix[1], target_pix[0] + 1], left_img[target_pix[1] + 1, target_pix[0] + 1]]])[:, :, 0, 0]), np.array([1 - b, b])))
-
-    """
+    cv2.imwrite('full_panorama_rgb.png', panorama)
